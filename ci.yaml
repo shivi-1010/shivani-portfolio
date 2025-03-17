@@ -1,0 +1,37 @@
+name: Shivani Varu Portfolio CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Build Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: ./docker/Dockerfile
+        push: false
+        tags: shivani-portfolio:latest
+        load: true
+    
+    - name: Validate Kubernetes manifests
+      run: |
+        curl -LO "https://dl.k8s.io/release/v1.26.0/bin/windows/amd64/kubectl.exe"
+        .\kubectl.exe version --client
+        .\kubectl.exe kustomize kubernetes/ > /dev/null
+    
+    - name: Run HTML validation
+      run: |
+        npm install -g html-validate
+        html-validate index.html

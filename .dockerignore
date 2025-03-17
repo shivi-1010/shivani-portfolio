@@ -1,0 +1,7 @@
+.git
+.github
+terraform/
+kubernetes/
+ansible/
+.gitignore
+README.md

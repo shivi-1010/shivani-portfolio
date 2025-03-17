@@ -1,0 +1,95 @@
+---
+- name: Deploy Shivani Varu's Portfolio Website
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  
+  tasks:
+    - name: Check if Minikube is running
+      command: minikube status
+      register: minikube_status
+      ignore_errors: yes
+      changed_when: false
+      
+    - name: Start Minikube if not running
+      command: minikube start --driver=docker
+      when: minikube_status.rc != 0
+      register: minikube_result
+      changed_when: "'Starting control plane' in minikube_result.stdout"
+      
+    - name: Enable Ingress Addon
+      command: minikube addons enable ingress
+      register: ingress_result
+      changed_when: "'ingress was successfully enabled' in ingress_result.stdout or 'already enabled' in ingress_result.stdout"
+      
+    - name: Build Docker Image for Portfolio
+      command: docker build -t shivani-portfolio:latest -f docker/Dockerfile .
+      args:
+        chdir: "{{ playbook_dir }}/.."
+        
+    - name: Load Image into Minikube
+      command: minikube image load shivani-portfolio:latest
+      
+    - name: Initialize Terraform
+      command: terraform init
+      args:
+        chdir: "{{ playbook_dir }}/../terraform"
+        
+    - name: Apply Terraform Configuration
+      command: terraform apply -auto-approve
+      args:
+        chdir: "{{ playbook_dir }}/../terraform"
+        
+    - name: Check if ArgoCD is installed
+      command: kubectl get namespace argocd
+      register: argocd_check
+      ignore_errors: yes
+      changed_when: false
+      
+    - name: Install ArgoCD if not present
+      command: kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+      when: argocd_check.rc != 0
+      
+    - name: Wait for ArgoCD to be ready
+      command: kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
+      
+    - name: Apply ArgoCD Application
+      command: kubectl apply -f ../kubernetes/argocd-app.yaml
+      args:
+        chdir: "{{ playbook_dir }}"
+        
+    - name: Get Minikube IP
+      command: minikube ip
+      register: minikube_ip
+      changed_when: false
+      
+    - name: Add portfolio.local to hosts file
+      become: yes
+      lineinfile:
+        path: C:\Windows\System32\drivers\etc\hosts
+        line: "{{ minikube_ip.stdout }} portfolio.local"
+        regexp: "^.* portfolio.local$"
+        state: present
+      
+    - name: Get ArgoCD admin password
+      command: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 --decode
+      register: argocd_password
+      changed_when: false
+      
+    - name: Display ArgoCD credentials
+      debug:
+        msg: 
+          - "ArgoCD is available at: https://localhost:8080 (after port-forwarding)"
+          - "Username: admin"
+          - "Password: {{ argocd_password.stdout }}"
+          
+    - name: Setup port-forwarding for ArgoCD
+      command: kubectl port-forward svc/argocd-server -n argocd 8080:443
+      async: 300
+      poll: 0
+      
+    - name: Display portfolio access information
+      debug:
+        msg:
+          - "Portfolio website will be available at: http://portfolio.local"
+          - "Please allow a few minutes for all services to start properly"

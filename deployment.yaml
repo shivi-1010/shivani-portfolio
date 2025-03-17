@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shivani-portfolio
+  namespace: portfolio
+  labels:
+    app: shivani-portfolio
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: shivani-portfolio
+  template:
+    metadata:
+      labels:
+        app: shivani-portfolio
+    spec:
+      containers:
+      - name: portfolio
+        image: shivani-portfolio:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: "0.5"
+            memory: "512Mi"
+          requests:
+            cpu: "0.2"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
