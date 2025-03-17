@@ -1,0 +1,36 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Deploy to GitHub Pages Only",
+        "type": "shell",
+        "command": "git add . && git commit -m 'Update portfolio' && git push origin main && npm run deploy",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      },
+      {
+        "label": "Deploy Complete Environment",
+        "type": "shell",
+        "command": ".\\deploy-all.ps1",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      },
+      {
+        "label": "Start Local Development Environment",
+        "type": "shell",
+        "command": "ansible-playbook deploy-portfolio.yaml --skip-tags github-pages",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      }
+    ]
+  }
+  

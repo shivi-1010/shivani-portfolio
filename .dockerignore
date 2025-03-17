@@ -5,3 +5,6 @@ kubernetes/
 ansible/
 .gitignore
 README.md
+node modules/
+.vscode
+.env
