@@ -1,4 +1,28 @@
 {
+  "name": "shivani-portfolio",
+  "version": "1.0.0",
+  "description": "Shivani Varu's Portfolio Website",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "mkdir -p build && cp -r index.html assets css js build/",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shivi-1010/shivani-portfolio.git"
+  },
+  "keywords": [
+    "portfolio",
+    "website"
+  ],
+  "author": "Shivani Varu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/shivi-1010/shivani-portfolio/issues"
+  },
+  "homepage": "https://shivi-1010.github.io/shivani-portfolio",
   "devDependencies": {
     "gh-pages": "^6.3.0"
   }
